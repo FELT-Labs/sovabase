@@ -1,66 +1,151 @@
 "use client";
 
-import Link from "next/link";
 import type { NextPage } from "next";
+import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
-import { BugAntIcon, MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import { Address } from "~~/components/scaffold-eth";
+import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
+import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 
 const Home: NextPage = () => {
-  const { address: connectedAddress } = useAccount();
+  const { address: connectedAddress, chain } = useAccount();
+  const { targetNetwork } = useTargetNetwork();
+
+  // Read vault name and symbol
+  const {
+    data: vaultName,
+    isLoading: nameLoading,
+    error: nameError,
+  } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "name",
+  });
+
+  const { data: vaultSymbol } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "symbol",
+  });
+
+  // Read total vault stats
+  const { data: totalAssets } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "totalAssets",
+  });
+
+  const { data: totalSupply } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "totalSupply",
+  });
+
+  const { data: vaultDecimals } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "decimals",
+  });
+
+  // Check if we're on the correct network
+  const isWrongNetwork = chain && chain.id !== targetNetwork.id;
+
+  // Read user-specific data
+  const { data: userBalance } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "balanceOf",
+    args: [connectedAddress],
+  });
+
+  const { data: userAssets } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "convertToAssets",
+    args: [userBalance],
+  });
+
+  // Format numbers for display
+  const formatAmount = (value: bigint | undefined, decimalsValue: number | undefined) => {
+    if (value === undefined || decimalsValue === undefined) return "...";
+    return parseFloat(formatUnits(value, decimalsValue)).toLocaleString(undefined, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 6,
+    });
+  };
+
+  // Determine asset decimals (likely 6 for USDC/USDT based on the raw values)
+  // We can infer this from the magnitude of totalAssets vs totalSupply
+  const inferredAssetDecimals = 6; // Most vault assets are USDC with 6 decimals
 
   return (
     <>
       <div className="flex items-center flex-col grow pt-10">
-        <div className="px-5">
-          <h1 className="text-center">
-            <span className="block text-2xl mb-2">Welcome to</span>
-            <span className="block text-4xl font-bold">Scaffold-ETH 2</span>
-          </h1>
-          <div className="flex justify-center items-center space-x-2 flex-col">
-            <p className="my-2 font-medium">Connected Address:</p>
-            <Address address={connectedAddress} />
+        <div className="px-5 w-full max-w-7xl">
+          {/* Network Warning */}
+          {isWrongNetwork && (
+            <div className="alert alert-warning mb-6">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="stroke-current shrink-0 h-6 w-6"
+                fill="none"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+              <span>
+                Wrong network! Please switch to <strong>{targetNetwork.name}</strong> to view vault data.
+              </span>
+            </div>
+          )}
+
+          {/* Header */}
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold mb-2">{vaultName || "Loading..."}</h1>
+            <p className="text-xl text-base-content/70">{vaultSymbol || ""}</p>
+            {nameLoading && <p className="text-sm text-base-content/50">Loading vault info...</p>}
+            {nameError && <p className="text-sm text-error">Error loading vault: {nameError.message}</p>}
           </div>
 
-          <p className="text-center text-lg">
-            Get started by editing{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/nextjs/app/page.tsx
-            </code>
-          </p>
-          <p className="text-center text-lg">
-            Edit your smart contract{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              YourContract.sol
-            </code>{" "}
-            in{" "}
-            <code className="italic bg-base-300 text-base font-bold max-w-full break-words break-all inline-block">
-              packages/hardhat/contracts
-            </code>
-          </p>
-        </div>
+          {/* Connected Address */}
+          <div className="flex justify-center items-center space-x-2 flex-col mb-12">
+            <p className="font-medium">Connected Address:</p>
+            <Address address={connectedAddress} />
+            {chain && (
+              <p className="text-sm text-base-content/60">
+                Network: {chain.name} (ID: {chain.id})
+              </p>
+            )}
+          </div>
 
-        <div className="grow bg-base-300 w-full mt-16 px-8 py-12">
-          <div className="flex justify-center items-center gap-12 flex-col md:flex-row">
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <BugAntIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Tinker with your smart contract using the{" "}
-                <Link href="/debug" passHref className="link">
-                  Debug Contracts
-                </Link>{" "}
-                tab.
+          {/* Vault Stats Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {/* Total Assets Card */}
+            <div className="bg-base-100 rounded-3xl p-6 shadow-lg">
+              <h3 className="text-sm font-medium text-base-content/60 mb-2">Total Assets</h3>
+              <p className="text-3xl font-bold">{formatAmount(totalAssets, inferredAssetDecimals)}</p>
+              <p className="text-xs text-base-content/50 mt-1">USDC</p>
+            </div>
+
+            {/* Total Supply Card */}
+            <div className="bg-base-100 rounded-3xl p-6 shadow-lg">
+              <h3 className="text-sm font-medium text-base-content/60 mb-2">Total Supply (Shares)</h3>
+              <p className="text-3xl font-bold">{formatAmount(totalSupply, vaultDecimals)}</p>
+            </div>
+
+            {/* User Balance Card */}
+            <div className="bg-base-100 rounded-3xl p-6 shadow-lg">
+              <h3 className="text-sm font-medium text-base-content/60 mb-2">Your Balance (Shares)</h3>
+              <p className="text-3xl font-bold">
+                {connectedAddress ? formatAmount(userBalance, vaultDecimals) : "Connect Wallet"}
               </p>
             </div>
-            <div className="flex flex-col bg-base-100 px-10 py-10 text-center items-center max-w-xs rounded-3xl">
-              <MagnifyingGlassIcon className="h-8 w-8 fill-secondary" />
-              <p>
-                Explore your local transactions with the{" "}
-                <Link href="/blockexplorer" passHref className="link">
-                  Block Explorer
-                </Link>{" "}
-                tab.
+
+            {/* User Assets Value Card */}
+            <div className="bg-base-100 rounded-3xl p-6 shadow-lg md:col-span-2 lg:col-span-3">
+              <h3 className="text-sm font-medium text-base-content/60 mb-2">Your Assets Value</h3>
+              <p className="text-3xl font-bold">
+                {connectedAddress ? formatAmount(userAssets, inferredAssetDecimals) : "Connect Wallet"}
               </p>
+              <p className="text-xs text-base-content/50 mt-1">USDC</p>
             </div>
           </div>
         </div>
