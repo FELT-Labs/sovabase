@@ -1,4 +1,4 @@
-# 💎 Sovabase
+# 🦉 Sovabase
 
 **Secure and efficient yield vaults for DeFi**
 
