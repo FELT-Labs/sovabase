@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import type { NextPage } from "next";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
@@ -11,16 +12,6 @@ const Home: NextPage = () => {
   const { address: connectedAddress, chain } = useAccount();
   const { targetNetwork } = useTargetNetwork();
 
-  // Read vault name and symbol
-  const {
-    data: vaultName,
-    isLoading: nameLoading,
-    error: nameError,
-  } = useScaffoldReadContract({
-    contractName: "vault",
-    functionName: "name",
-  });
-
   const { data: vaultSymbol } = useScaffoldReadContract({
     contractName: "vault",
     functionName: "symbol",
@@ -30,11 +21,6 @@ const Home: NextPage = () => {
   const { data: totalAssets } = useScaffoldReadContract({
     contractName: "vault",
     functionName: "totalAssets",
-  });
-
-  const { data: totalSupply } = useScaffoldReadContract({
-    contractName: "vault",
-    functionName: "totalSupply",
   });
 
   const { data: vaultDecimals } = useScaffoldReadContract({
@@ -50,12 +36,6 @@ const Home: NextPage = () => {
     contractName: "vault",
     functionName: "balanceOf",
     args: [connectedAddress],
-  });
-
-  const { data: userAssets } = useScaffoldReadContract({
-    contractName: "vault",
-    functionName: "convertToAssets",
-    args: [userBalance],
   });
 
   // Format numbers for display
@@ -98,54 +78,83 @@ const Home: NextPage = () => {
           )}
 
           {/* Header */}
-          <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-2">{vaultName || "Loading..."}</h1>
-            <p className="text-xl text-base-content/70">{vaultSymbol || ""}</p>
-            {nameLoading && <p className="text-sm text-base-content/50">Loading vault info...</p>}
-            {nameError && <p className="text-sm text-error">Error loading vault: {nameError.message}</p>}
+          <div className="text-center mb-4">
+            <h1 className="text-3xl font-bold mb-1">Sovabase Vaults</h1>
+            <p className="text-sm text-base-content/70">Secure and efficient yield vaults</p>
           </div>
 
           {/* Connected Address */}
-          <div className="flex justify-center items-center space-x-2 flex-col mb-12">
-            <p className="font-medium">Connected Address:</p>
+          <div className="flex justify-center items-center space-x-2 flex-col mb-6">
+            <p className="font-medium text-xs">Connected Address:</p>
             <Address address={connectedAddress} />
             {chain && (
-              <p className="text-sm text-base-content/60">
+              <p className="text-xs text-base-content/60">
                 Network: {chain.name} (ID: {chain.id})
               </p>
             )}
           </div>
 
-          {/* Vault Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-            {/* Total Assets Card */}
-            <div className="bg-base-100 rounded-3xl p-6 shadow-lg">
-              <h3 className="text-sm font-medium text-base-content/60 mb-2">Total Assets</h3>
-              <p className="text-3xl font-bold">{formatAmount(totalAssets, inferredAssetDecimals)}</p>
-              <p className="text-xs text-base-content/50 mt-1">USDC</p>
-            </div>
+          {/* Vault Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+            {/* USDC Vault Card */}
+            <Link href="/vault/usdc" className="group">
+              <div className="bg-base-100 rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 cursor-pointer border-2 border-transparent hover:border-primary">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h2 className="text-xl font-bold">USDC Vault</h2>
+                    <p className="text-xs text-base-content/70">{vaultSymbol || ""}</p>
+                  </div>
+                  <div className="text-3xl">💵</div>
+                </div>
 
-            {/* Total Supply Card */}
-            <div className="bg-base-100 rounded-3xl p-6 shadow-lg">
-              <h3 className="text-sm font-medium text-base-content/60 mb-2">Total Supply (Shares)</h3>
-              <p className="text-3xl font-bold">{formatAmount(totalSupply, vaultDecimals)}</p>
-            </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-base-200 rounded-lg p-2">
+                    <p className="text-xs text-base-content/60">Total Assets</p>
+                    <p className="text-lg font-bold">{formatAmount(totalAssets, inferredAssetDecimals)}</p>
+                    <p className="text-xs text-base-content/50">USDC</p>
+                  </div>
 
-            {/* User Balance Card */}
-            <div className="bg-base-100 rounded-3xl p-6 shadow-lg">
-              <h3 className="text-sm font-medium text-base-content/60 mb-2">Your Balance (Shares)</h3>
-              <p className="text-3xl font-bold">
-                {connectedAddress ? formatAmount(userBalance, vaultDecimals) : "Connect Wallet"}
-              </p>
-            </div>
+                  <div className="bg-base-200 rounded-lg p-2">
+                    <p className="text-xs text-base-content/60">Your Balance</p>
+                    <p className="text-lg font-bold">
+                      {connectedAddress ? formatAmount(userBalance, vaultDecimals) : "0.00"}
+                    </p>
+                    <p className="text-xs text-base-content/50">Shares</p>
+                  </div>
+                </div>
+              </div>
+            </Link>
 
-            {/* User Assets Value Card */}
-            <div className="bg-base-100 rounded-3xl p-6 shadow-lg md:col-span-2 lg:col-span-3">
-              <h3 className="text-sm font-medium text-base-content/60 mb-2">Your Assets Value</h3>
-              <p className="text-3xl font-bold">
-                {connectedAddress ? formatAmount(userAssets, inferredAssetDecimals) : "Connect Wallet"}
-              </p>
-              <p className="text-xs text-base-content/50 mt-1">USDC</p>
+            {/* ETH Vault Card (Under Development) */}
+            <div className="relative group cursor-not-allowed">
+              <div className="bg-base-100 rounded-xl p-4 shadow-lg group-hover:shadow-xl transition-all duration-300 transform group-hover:-translate-y-1 border-2 border-base-300 opacity-75">
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h2 className="text-xl font-bold">ETH Vault</h2>
+                    <p className="text-xs text-base-content/70">svETH</p>
+                  </div>
+                  <div className="text-3xl">💎</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="bg-base-200 rounded-lg p-2">
+                    <p className="text-xs text-base-content/60">Total Assets</p>
+                    <p className="text-lg font-bold">--</p>
+                    <p className="text-xs text-base-content/50">ETH</p>
+                  </div>
+
+                  <div className="bg-base-200 rounded-lg p-2">
+                    <p className="text-xs text-base-content/60">Your Balance</p>
+                    <p className="text-lg font-bold">--</p>
+                    <p className="text-xs text-base-content/50">Shares</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Under Development Badge */}
+              <div className="absolute top-2 right-2 bg-warning text-warning-content px-2 py-1 rounded-full font-semibold text-xs shadow-lg">
+                🚧 Coming Soon
+              </div>
             </div>
           </div>
         </div>
