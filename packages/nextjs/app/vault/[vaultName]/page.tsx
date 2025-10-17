@@ -4,15 +4,12 @@ import Link from "next/link";
 import type { NextPage } from "next";
 import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
-import { Address } from "~~/components/scaffold-eth";
 import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
-import { useTargetNetwork } from "~~/hooks/scaffold-eth/useTargetNetwork";
 
 const VaultDetailPage: NextPage = () => {
   // const params = useParams();
   // const vaultName = params?.vaultName as string;
-  const { address: connectedAddress, chain } = useAccount();
-  const { targetNetwork } = useTargetNetwork();
+  const { address: connectedAddress } = useAccount();
 
   // Read vault name and symbol
   const {
@@ -44,9 +41,6 @@ const VaultDetailPage: NextPage = () => {
     contractName: "vault",
     functionName: "decimals",
   });
-
-  // Check if we're on the correct network
-  const isWrongNetwork = chain && chain.id !== targetNetwork.id;
 
   // Read user-specific data
   const { data: userBalance } = useScaffoldReadContract({
@@ -91,28 +85,6 @@ const VaultDetailPage: NextPage = () => {
             Back to Vaults
           </Link>
 
-          {/* Network Warning */}
-          {isWrongNetwork && (
-            <div className="alert alert-warning mb-6">
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                className="stroke-current shrink-0 h-6 w-6"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                />
-              </svg>
-              <span>
-                Wrong network! Please switch to <strong>{targetNetwork.name}</strong> to view vault data.
-              </span>
-            </div>
-          )}
-
           {/* Header */}
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
@@ -124,17 +96,6 @@ const VaultDetailPage: NextPage = () => {
             </div>
             {nameLoading && <p className="text-sm text-base-content/50">Loading vault info...</p>}
             {nameError && <p className="text-sm text-error">Error loading vault: {nameError.message}</p>}
-          </div>
-
-          {/* Connected Address */}
-          <div className="flex justify-center items-center space-x-2 flex-col mb-12">
-            <p className="font-medium">Connected Address:</p>
-            <Address address={connectedAddress} />
-            {chain && (
-              <p className="text-sm text-base-content/60">
-                Network: {chain.name} (ID: {chain.id})
-              </p>
-            )}
           </div>
 
           {/* Vault Stats Grid */}
