@@ -1,23 +1,48 @@
 "use client";
 
-import Link from "next/link";
+import { useState } from "react";
+import { VaultActions, VaultDataTabs, VaultHeader, VaultMetrics } from "../_components";
 import type { NextPage } from "next";
-import { formatUnits } from "viem";
+import { formatUnits, parseUnits } from "viem";
 import { useAccount } from "wagmi";
-import { useScaffoldReadContract } from "~~/hooks/scaffold-eth";
+import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
 const VaultDetailPage: NextPage = () => {
-  // const params = useParams();
-  // const vaultName = params?.vaultName as string;
   const { address: connectedAddress } = useAccount();
+  const [activeTab, setActiveTab] = useState<"position" | "overview" | "details">("position");
+  const [actionTab, setActionTab] = useState<"deposit" | "withdraw">("deposit");
+  const [depositAmount, setDepositAmount] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [isApproving, setIsApproving] = useState(false);
+  const [isDepositing, setIsDepositing] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  // Determine asset decimals (USDC has 6 decimals)
+  const inferredAssetDecimals = 6;
+
+  // Read vault metadata
+  const { data: vaultName } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "name",
+  });
+
+  const { data: vaultSymbol } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "symbol",
+  });
+
+  const { data: vaultAsset } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "asset",
+  });
 
   // Read total vault stats
-  const { data: totalAssets } = useScaffoldReadContract({
+  const { data: totalAssets, refetch: refetchTotalAssets } = useScaffoldReadContract({
     contractName: "vault",
     functionName: "totalAssets",
   });
 
-  const { data: totalSupply } = useScaffoldReadContract({
+  const { data: totalSupply, refetch: refetchTotalSupply } = useScaffoldReadContract({
     contractName: "vault",
     functionName: "totalSupply",
   });
@@ -27,18 +52,57 @@ const VaultDetailPage: NextPage = () => {
     functionName: "decimals",
   });
 
+  const { data: vaultFee } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "fee",
+  });
+
+  const { data: feeRecipient } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "feeRecipient",
+  });
+
   // Read user-specific data
-  const { data: userBalance } = useScaffoldReadContract({
+  const { data: userBalance, refetch: refetchUserBalance } = useScaffoldReadContract({
     contractName: "vault",
     functionName: "balanceOf",
     args: [connectedAddress],
   });
 
-  const { data: userAssets } = useScaffoldReadContract({
+  const { data: userAssets, refetch: refetchUserAssets } = useScaffoldReadContract({
     contractName: "vault",
     functionName: "convertToAssets",
     args: [userBalance],
   });
+
+  const { data: maxDeposit } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "maxDeposit",
+    args: [connectedAddress],
+  });
+
+  const { data: maxWithdraw } = useScaffoldReadContract({
+    contractName: "vault",
+    functionName: "maxWithdraw",
+    args: [connectedAddress],
+  });
+
+  // Read USDC data
+  const { data: usdcBalance, refetch: refetchUsdcBalance } = useScaffoldReadContract({
+    contractName: "usdc",
+    functionName: "balanceOf",
+    args: [connectedAddress],
+  });
+
+  const { data: usdcAllowance, refetch: refetchUsdcAllowance } = useScaffoldReadContract({
+    contractName: "usdc",
+    functionName: "allowance",
+    args: [connectedAddress, vaultAsset],
+  });
+
+  // Write contracts
+  const { writeContractAsync: writeUsdcAsync } = useScaffoldWriteContract({ contractName: "usdc" });
+  const { writeContractAsync: writeVaultAsync } = useScaffoldWriteContract({ contractName: "vault" });
 
   // Format numbers for display
   const formatAmount = (value: bigint | undefined, decimalsValue: number | undefined) => {
@@ -49,108 +113,144 @@ const VaultDetailPage: NextPage = () => {
     });
   };
 
-  // Determine asset decimals (likely 6 for USDC/USDT based on the raw values)
-  const inferredAssetDecimals = 6;
+  // Calculate share price
+  const sharePrice =
+    totalAssets && totalSupply && totalSupply > 0n
+      ? parseFloat(formatUnits(totalAssets, inferredAssetDecimals)) /
+        parseFloat(formatUnits(totalSupply, vaultDecimals || 18))
+      : 1;
+
+  // Calculate fee percentage
+  const feePercentage = vaultFee ? (Number(vaultFee) / 1e18) * 100 : 0;
+
+  // Handle approve USDC
+  const handleApprove = async () => {
+    if (!depositAmount || !connectedAddress) return;
+
+    try {
+      setIsApproving(true);
+      const amount = parseUnits(depositAmount, inferredAssetDecimals);
+      await writeUsdcAsync({
+        functionName: "approve",
+        args: [vaultAsset, amount],
+      });
+      await refetchUsdcAllowance();
+    } catch (error) {
+      console.error("Error approving USDC:", error);
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  // Handle deposit
+  const handleDeposit = async () => {
+    if (!depositAmount || !connectedAddress) return;
+
+    try {
+      setIsDepositing(true);
+      const amount = parseUnits(depositAmount, inferredAssetDecimals);
+      await writeVaultAsync({
+        functionName: "deposit",
+        args: [amount, connectedAddress],
+      });
+      setDepositAmount("");
+      await Promise.all([
+        refetchTotalAssets(),
+        refetchTotalSupply(),
+        refetchUserBalance(),
+        refetchUserAssets(),
+        refetchUsdcBalance(),
+      ]);
+    } catch (error) {
+      console.error("Error depositing:", error);
+    } finally {
+      setIsDepositing(false);
+    }
+  };
+
+  // Handle withdraw
+  const handleWithdraw = async () => {
+    if (!withdrawAmount || !connectedAddress) return;
+
+    try {
+      setIsWithdrawing(true);
+      const amount = parseUnits(withdrawAmount, inferredAssetDecimals);
+      await writeVaultAsync({
+        functionName: "withdraw",
+        args: [amount, connectedAddress, connectedAddress],
+      });
+      setWithdrawAmount("");
+      await Promise.all([
+        refetchTotalAssets(),
+        refetchTotalSupply(),
+        refetchUserBalance(),
+        refetchUserAssets(),
+        refetchUsdcBalance(),
+      ]);
+    } catch (error) {
+      console.error("Error withdrawing:", error);
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
+
+  // Check if approval is needed
+  const depositAmountBigInt = depositAmount ? parseUnits(depositAmount, inferredAssetDecimals) : 0n;
+  const needsApproval = depositAmountBigInt > 0n && (usdcAllowance || 0n) < depositAmountBigInt;
 
   return (
     <>
-      <div className="flex items-center flex-col grow pt-10">
-        <div className="px-5 w-full max-w-7xl">
-          {/* Back Button */}
-          <Link href="/" className="btn btn-ghost mb-6">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-6 w-6"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Back to Vaults
-          </Link>
+      <div className="flex items-center flex-col grow pt-6">
+        <div className="px-4 w-full max-w-7xl">
+          <VaultHeader vaultName={vaultName} />
 
-          {/* Header */}
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <div className="text-6xl mr-4">💵</div>
-              <h1 className="text-5xl font-bold mb-2">USDC Vault</h1>
-            </div>
-            <div className="max-w-2xl mx-auto mt-4">
-              <p className="text-base text-base-content/70">
-                Automatic rebalancing across most established DeFi protocols.
-              </p>
-              <p className="text-sm text-base-content/60 mt-2">
-                🦉 Non-custodial • Your funds, your control • Withdraw anytime
-              </p>
-            </div>
-          </div>
+          <VaultMetrics totalAssets={totalAssets} formatAmount={formatAmount} assetDecimals={inferredAssetDecimals} />
 
-          {/* Vault Stats Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-            {/* Total Assets Card */}
-            <div className="bg-base-100 rounded-3xl p-6 shadow-lg">
-              <h3 className="text-sm font-medium text-base-content/60 mb-2">Total Assets</h3>
-              <p className="text-3xl font-bold">{formatAmount(totalAssets, inferredAssetDecimals)}</p>
-              <p className="text-xs text-base-content/50 mt-1">USDC</p>
-            </div>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <VaultDataTabs
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+              connectedAddress={connectedAddress}
+              userAssets={userAssets}
+              userBalance={userBalance}
+              usdcBalance={usdcBalance}
+              maxDeposit={maxDeposit}
+              maxWithdraw={maxWithdraw}
+              sharePrice={sharePrice}
+              totalAssets={totalAssets}
+              totalSupply={totalSupply}
+              vaultDecimals={vaultDecimals}
+              vaultName={vaultName}
+              vaultSymbol={vaultSymbol}
+              feePercentage={feePercentage}
+              feeRecipient={feeRecipient}
+              vaultAsset={vaultAsset}
+              formatAmount={formatAmount}
+              assetDecimals={inferredAssetDecimals}
+            />
 
-            {/* Total Supply Card */}
-            <div className="bg-base-100 rounded-3xl p-6 shadow-lg">
-              <h3 className="text-sm font-medium text-base-content/60 mb-2">Total Supply (Shares)</h3>
-              <p className="text-3xl font-bold">{formatAmount(totalSupply, vaultDecimals)}</p>
-            </div>
-
-            {/* User Balance Card */}
-            <div className="bg-base-100 rounded-3xl p-6 shadow-lg">
-              <h3 className="text-sm font-medium text-base-content/60 mb-2">Your Balance (Shares)</h3>
-              <p className="text-3xl font-bold">
-                {connectedAddress ? formatAmount(userBalance, vaultDecimals) : "Connect Wallet"}
-              </p>
-            </div>
-
-            {/* User Assets Value Card */}
-            <div className="bg-base-100 rounded-3xl p-6 shadow-lg md:col-span-2 lg:col-span-3">
-              <h3 className="text-sm font-medium text-base-content/60 mb-2">Your Assets Value</h3>
-              <p className="text-3xl font-bold">
-                {connectedAddress ? formatAmount(userAssets, inferredAssetDecimals) : "Connect Wallet"}
-              </p>
-              <p className="text-xs text-base-content/50 mt-1">USDC</p>
-            </div>
-          </div>
-
-          {/* Actions Section - Placeholder for future functionality */}
-          <div className="bg-base-100 rounded-3xl p-8 shadow-lg mb-8">
-            <h2 className="text-2xl font-bold mb-6">Vault Actions</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <button className="btn btn-primary btn-lg" disabled>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                </svg>
-                Deposit (Coming Soon)
-              </button>
-              <button className="btn btn-secondary btn-lg" disabled>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-6 w-6 mr-2"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-                </svg>
-                Withdraw (Coming Soon)
-              </button>
-            </div>
-            <p className="text-sm text-base-content/60 mt-4 text-center">
-              Deposit and withdrawal functionality will be available soon.
-            </p>
+            <VaultActions
+              actionTab={actionTab}
+              setActionTab={setActionTab}
+              connectedAddress={connectedAddress}
+              depositAmount={depositAmount}
+              setDepositAmount={setDepositAmount}
+              usdcBalance={usdcBalance}
+              needsApproval={needsApproval}
+              isApproving={isApproving}
+              isDepositing={isDepositing}
+              handleApprove={handleApprove}
+              handleDeposit={handleDeposit}
+              withdrawAmount={withdrawAmount}
+              setWithdrawAmount={setWithdrawAmount}
+              maxWithdraw={maxWithdraw}
+              isWithdrawing={isWithdrawing}
+              handleWithdraw={handleWithdraw}
+              formatAmount={formatAmount}
+              assetDecimals={inferredAssetDecimals}
+              sharePrice={sharePrice}
+              vaultDecimals={vaultDecimals}
+            />
           </div>
         </div>
       </div>
