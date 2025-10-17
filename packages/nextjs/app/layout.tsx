@@ -5,8 +5,9 @@ import "~~/styles/globals.css";
 import { getMetadata } from "~~/utils/scaffold-eth/getMetadata";
 
 export const metadata = getMetadata({
-  title: "Scaffold-ETH 2 App",
-  description: "Built with 🏗 Scaffold-ETH 2",
+  title: "SovaBase - The Wise Way to Manage Your Crypto",
+  description:
+    "Stop chasing DeFi yields. Let the owl watch while you build. Non-custodial crypto vault management with steady returns from battle-tested DeFi protocols.",
 });
 
 const ScaffoldEthApp = ({ children }: { children: React.ReactNode }) => {
