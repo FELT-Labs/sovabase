@@ -11,21 +11,6 @@ const VaultDetailPage: NextPage = () => {
   // const vaultName = params?.vaultName as string;
   const { address: connectedAddress } = useAccount();
 
-  // Read vault name and symbol
-  const {
-    data: contractVaultName,
-    isLoading: nameLoading,
-    error: nameError,
-  } = useScaffoldReadContract({
-    contractName: "vault",
-    functionName: "name",
-  });
-
-  const { data: vaultSymbol } = useScaffoldReadContract({
-    contractName: "vault",
-    functionName: "symbol",
-  });
-
   // Read total vault stats
   const { data: totalAssets } = useScaffoldReadContract({
     contractName: "vault",
@@ -89,13 +74,16 @@ const VaultDetailPage: NextPage = () => {
           <div className="text-center mb-8">
             <div className="flex items-center justify-center mb-4">
               <div className="text-6xl mr-4">💵</div>
-              <div>
-                <h1 className="text-5xl font-bold mb-2">{contractVaultName || "Loading..."}</h1>
-                <p className="text-2xl text-base-content/70">{vaultSymbol || ""}</p>
-              </div>
+              <h1 className="text-5xl font-bold mb-2">USDC Vault</h1>
             </div>
-            {nameLoading && <p className="text-sm text-base-content/50">Loading vault info...</p>}
-            {nameError && <p className="text-sm text-error">Error loading vault: {nameError.message}</p>}
+            <div className="max-w-2xl mx-auto mt-4">
+              <p className="text-base text-base-content/70">
+                Automatic rebalancing across most established DeFi protocols.
+              </p>
+              <p className="text-sm text-base-content/60 mt-2">
+                🦉 Non-custodial • Your funds, your control • Withdraw anytime
+              </p>
+            </div>
           </div>
 
           {/* Vault Stats Grid */}

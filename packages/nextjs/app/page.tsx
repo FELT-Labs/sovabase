@@ -49,10 +49,24 @@ const Home: NextPage = () => {
     <>
       <div className="flex items-center flex-col grow pt-10">
         <div className="px-5 w-full max-w-7xl">
-          {/* Header */}
+          {/* Hero Section */}
+          <div className="text-center mb-8">
+            <div className="text-6xl mb-4">🦉</div>
+            <h1 className="text-4xl font-bold mb-3">The Wise Way to Manage Your Crypto</h1>
+            <p className="text-lg text-base-content/70 mb-6">
+              Stop chasing DeFi yields. Let the owl watch while you build.
+            </p>
+            <div className="flex flex-wrap justify-center gap-4 text-sm text-base-content/60 mb-8">
+              <span className="flex items-center gap-1">🔒 Non-custodial</span>
+              <span className="flex items-center gap-1">✓ Smart Contracts</span>
+              <span className="flex items-center gap-1">🔑 Your Keys, Always</span>
+            </div>
+          </div>
+
+          {/* Vaults Header */}
           <div className="text-center mb-4">
-            <h1 className="text-3xl font-bold mb-1">Sovabase Vaults</h1>
-            <p className="text-sm text-base-content/70">Secure and efficient yield vaults</p>
+            <h2 className="text-2xl font-bold mb-1">SovaBase Vaults</h2>
+            <p className="text-sm text-base-content/70">Steady returns from battle-tested DeFi protocols</p>
           </div>
 
           {/* Vault Cards Grid */}
