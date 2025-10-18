@@ -5,7 +5,7 @@ import { VaultActions, VaultDataTabs, VaultHeader, VaultMetrics } from "../_comp
 import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount } from "wagmi";
-import { useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
 const VaultDetailPage: NextPage = () => {
   const { address: connectedAddress } = useAccount();
@@ -94,10 +94,14 @@ const VaultDetailPage: NextPage = () => {
     args: [connectedAddress],
   });
 
+  // Get vault contract address
+  const { data: vaultContractInfo } = useDeployedContractInfo("vault");
+  const vaultAddress = vaultContractInfo?.address;
+
   const { data: usdcAllowance, refetch: refetchUsdcAllowance } = useScaffoldReadContract({
     contractName: "usdc",
     functionName: "allowance",
-    args: [connectedAddress, vaultAsset],
+    args: [connectedAddress, vaultAddress],
   });
 
   // Write contracts
@@ -132,7 +136,7 @@ const VaultDetailPage: NextPage = () => {
       const amount = parseUnits(depositAmount, inferredAssetDecimals);
       await writeUsdcAsync({
         functionName: "approve",
-        args: [vaultAsset, amount],
+        args: [vaultAddress, amount],
       });
       await refetchUsdcAllowance();
     } catch (error) {
@@ -160,6 +164,7 @@ const VaultDetailPage: NextPage = () => {
         refetchUserBalance(),
         refetchUserAssets(),
         refetchUsdcBalance(),
+        refetchUsdcAllowance(),
       ]);
     } catch (error) {
       console.error("Error depositing:", error);
