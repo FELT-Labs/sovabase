@@ -5,6 +5,7 @@ import { VaultActions, VaultDataTabs, VaultHeader, VaultMetrics } from "../_comp
 import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount } from "wagmi";
+import useMorphoVault from "~~/hooks/morpho/useMorphoVault";
 import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
 
 const VaultDetailPage: NextPage = () => {
@@ -97,6 +98,8 @@ const VaultDetailPage: NextPage = () => {
   // Get vault contract address
   const { data: vaultContractInfo } = useDeployedContractInfo("vault");
   const vaultAddress = vaultContractInfo?.address;
+  // Get APY from Morpho
+  const { data: morphoData } = useMorphoVault(vaultAddress as string | undefined);
 
   const { data: usdcAllowance, refetch: refetchUsdcAllowance } = useScaffoldReadContract({
     contractName: "usdc",
@@ -209,7 +212,12 @@ const VaultDetailPage: NextPage = () => {
         <div className="px-4 w-full max-w-7xl">
           <VaultHeader vaultName={vaultName} />
 
-          <VaultMetrics totalAssets={totalAssets} formatAmount={formatAmount} assetDecimals={inferredAssetDecimals} />
+          <VaultMetrics
+            totalAssets={totalAssets}
+            formatAmount={formatAmount}
+            assetDecimals={inferredAssetDecimals}
+            apy={morphoData?.apy ?? 0}
+          />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <VaultDataTabs
