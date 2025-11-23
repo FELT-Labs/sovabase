@@ -6,7 +6,12 @@ import type { NextPage } from "next";
 import { formatUnits, parseUnits } from "viem";
 import { useAccount } from "wagmi";
 import useMorphoVault from "~~/hooks/morpho/useMorphoVault";
-import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import {
+  useDeployedContractInfo,
+  usePermitDeposit,
+  useScaffoldReadContract,
+  useScaffoldWriteContract,
+} from "~~/hooks/scaffold-eth";
 
 const VaultDetailPage: NextPage = () => {
   const { address: connectedAddress } = useAccount();
@@ -14,11 +19,12 @@ const VaultDetailPage: NextPage = () => {
   const [actionTab, setActionTab] = useState<"deposit" | "withdraw">("deposit");
   const [depositAmount, setDepositAmount] = useState("");
   const [withdrawAmount, setWithdrawAmount] = useState("");
-  const [isApproving, setIsApproving] = useState(false);
-  const [isDepositing, setIsDepositing] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
   const [isMaxDeposit, setIsMaxDeposit] = useState(false);
   const [isMaxWithdraw, setIsMaxWithdraw] = useState(false);
+
+  // Use permit deposit hook
+  const { permitDeposit, isProcessing: isDepositing } = usePermitDeposit();
 
   // Determine asset decimals (USDC has 6 decimals)
   const inferredAssetDecimals = 6;
@@ -103,14 +109,7 @@ const VaultDetailPage: NextPage = () => {
   // Get APY from Morpho
   const { data: morphoData } = useMorphoVault(vaultAddress as string | undefined);
 
-  const { data: usdcAllowance, refetch: refetchUsdcAllowance } = useScaffoldReadContract({
-    contractName: "usdc",
-    functionName: "allowance",
-    args: [connectedAddress, vaultAddress],
-  });
-
   // Write contracts
-  const { writeContractAsync: writeUsdcAsync } = useScaffoldWriteContract({ contractName: "usdc" });
   const { writeContractAsync: writeVaultAsync } = useScaffoldWriteContract({ contractName: "vault" });
 
   // Format numbers for display
@@ -135,46 +134,12 @@ const VaultDetailPage: NextPage = () => {
   // Calculate fee percentage
   const feePercentage = vaultFee ? (Number(vaultFee) / 1e18) * 100 : 0;
 
-  // Handle approve USDC
-  const handleApprove = async () => {
-    if (!depositAmount || !connectedAddress) return;
-
-    try {
-      setIsApproving(true);
-      let amount;
-      if (isMaxDeposit && usdcBalance) {
-        amount = usdcBalance;
-      } else {
-        amount = parseUnits(depositAmount, inferredAssetDecimals);
-      }
-      await writeUsdcAsync({
-        functionName: "approve",
-        args: [vaultAddress, amount],
-      });
-      await refetchUsdcAllowance();
-    } catch (error) {
-      console.error("Error approving USDC:", error);
-    } finally {
-      setIsApproving(false);
-    }
-  };
-
-  // Handle deposit
+  // Handle deposit with permit
   const handleDeposit = async () => {
     if (!depositAmount || !connectedAddress) return;
 
     try {
-      setIsDepositing(true);
-      let amount;
-      if (isMaxDeposit && usdcBalance) {
-        amount = usdcBalance;
-      } else {
-        amount = parseUnits(depositAmount, inferredAssetDecimals);
-      }
-      await writeVaultAsync({
-        functionName: "deposit",
-        args: [amount, connectedAddress],
-      });
+      await permitDeposit(depositAmount, inferredAssetDecimals, isMaxDeposit, usdcBalance);
       setDepositAmount("");
       setIsMaxDeposit(false);
       await Promise.all([
@@ -183,12 +148,9 @@ const VaultDetailPage: NextPage = () => {
         refetchUserBalance(),
         refetchUserAssets(),
         refetchUsdcBalance(),
-        refetchUsdcAllowance(),
       ]);
     } catch (error) {
       console.error("Error depositing:", error);
-    } finally {
-      setIsDepositing(false);
     }
   };
 
@@ -223,15 +185,6 @@ const VaultDetailPage: NextPage = () => {
       setIsWithdrawing(false);
     }
   };
-
-  // Check if approval is needed
-  let depositAmountBigInt = 0n;
-  if (isMaxDeposit && usdcBalance) {
-    depositAmountBigInt = usdcBalance;
-  } else {
-    depositAmountBigInt = depositAmount ? parseUnits(depositAmount, inferredAssetDecimals) : 0n;
-  }
-  const needsApproval = depositAmountBigInt > 0n && (usdcAllowance || 0n) < depositAmountBigInt;
 
   return (
     <>
@@ -276,10 +229,7 @@ const VaultDetailPage: NextPage = () => {
               depositAmount={depositAmount}
               setDepositAmount={setDepositAmount}
               usdcBalance={usdcBalance}
-              needsApproval={needsApproval}
-              isApproving={isApproving}
               isDepositing={isDepositing}
-              handleApprove={handleApprove}
               handleDeposit={handleDeposit}
               withdrawAmount={withdrawAmount}
               setWithdrawAmount={setWithdrawAmount}

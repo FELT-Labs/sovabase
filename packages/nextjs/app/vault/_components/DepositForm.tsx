@@ -5,10 +5,7 @@ interface DepositFormProps {
   depositAmount: string;
   setDepositAmount: (amount: string) => void;
   usdcBalance?: bigint;
-  needsApproval: boolean;
-  isApproving: boolean;
   isDepositing: boolean;
-  handleApprove: () => Promise<void>;
   handleDeposit: () => Promise<void>;
   formatAmount: (value: bigint | undefined, decimals: number | undefined) => string;
   assetDecimals: number;
@@ -20,10 +17,7 @@ export const DepositForm = ({
   depositAmount,
   setDepositAmount,
   usdcBalance,
-  needsApproval,
-  isApproving,
   isDepositing,
-  handleApprove,
   handleDeposit,
   formatAmount,
   assetDecimals,
@@ -87,26 +81,6 @@ export const DepositForm = ({
           <button className="btn btn-primary btn-sm w-full" disabled>
             Connect Wallet
           </button>
-        ) : needsApproval ? (
-          <div className="space-y-2">
-            <button
-              className="btn btn-primary btn-sm w-full"
-              onClick={handleApprove}
-              disabled={!depositAmount || isApproving}
-            >
-              {isApproving ? (
-                <>
-                  <span className="loading loading-spinner loading-xs"></span>
-                  Approving...
-                </>
-              ) : (
-                <>Step 1/2: Approve USDC</>
-              )}
-            </button>
-            <button className="btn btn-primary btn-sm w-full" disabled>
-              Step 2/2: Deposit
-            </button>
-          </div>
         ) : (
           <button
             className="btn btn-primary btn-sm w-full"

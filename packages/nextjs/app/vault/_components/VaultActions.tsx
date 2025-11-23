@@ -9,10 +9,7 @@ interface VaultActionsProps {
   depositAmount: string;
   setDepositAmount: (amount: string) => void;
   usdcBalance?: bigint;
-  needsApproval: boolean;
-  isApproving: boolean;
   isDepositing: boolean;
-  handleApprove: () => Promise<void>;
   handleDeposit: () => Promise<void>;
   // Withdraw props
   withdrawAmount: string;
@@ -36,10 +33,7 @@ export const VaultActions = ({
   depositAmount,
   setDepositAmount,
   usdcBalance,
-  needsApproval,
-  isApproving,
   isDepositing,
-  handleApprove,
   handleDeposit,
   withdrawAmount,
   setWithdrawAmount,
@@ -79,10 +73,7 @@ export const VaultActions = ({
             depositAmount={depositAmount}
             setDepositAmount={setDepositAmount}
             usdcBalance={usdcBalance}
-            needsApproval={needsApproval}
-            isApproving={isApproving}
             isDepositing={isDepositing}
-            handleApprove={handleApprove}
             handleDeposit={handleDeposit}
             formatAmount={formatAmount}
             assetDecimals={assetDecimals}
