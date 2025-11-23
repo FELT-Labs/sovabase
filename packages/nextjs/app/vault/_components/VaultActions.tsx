@@ -1,52 +1,75 @@
+import { useState } from "react";
 import { DepositForm } from "./DepositForm";
 import { WithdrawForm } from "./WithdrawForm";
+import { parseUnits } from "viem";
+import { useAccount } from "wagmi";
+import { usePermitDeposit, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { VaultData } from "~~/hooks/sovabase/useVaultData";
+import { DEFAULT_ASSET_DECIMALS } from "~~/utils/sovabase";
 
 interface VaultActionsProps {
-  actionTab: "deposit" | "withdraw";
-  setActionTab: (tab: "deposit" | "withdraw") => void;
-  connectedAddress?: string;
-  // Deposit props
-  depositAmount: string;
-  setDepositAmount: (amount: string) => void;
-  usdcBalance?: bigint;
-  isDepositing: boolean;
-  handleDeposit: () => Promise<void>;
-  // Withdraw props
-  withdrawAmount: string;
-  setWithdrawAmount: (amount: string) => void;
-  maxWithdraw?: bigint;
-  isWithdrawing: boolean;
-  handleWithdraw: () => Promise<void>;
-  // Common props
-  formatAmount: (value: bigint | undefined, decimals: number | undefined) => string;
-  assetDecimals: number;
-  sharePrice: number;
-  vaultDecimals?: number;
-  setIsMaxDeposit: (isMax: boolean) => void;
-  setIsMaxWithdraw: (isMax: boolean) => void;
+  data: VaultData;
 }
 
-export const VaultActions = ({
-  actionTab,
-  setActionTab,
-  connectedAddress,
-  depositAmount,
-  setDepositAmount,
-  usdcBalance,
-  isDepositing,
-  handleDeposit,
-  withdrawAmount,
-  setWithdrawAmount,
-  maxWithdraw,
-  isWithdrawing,
-  handleWithdraw,
-  formatAmount,
-  assetDecimals,
-  sharePrice,
-  vaultDecimals,
-  setIsMaxDeposit,
-  setIsMaxWithdraw,
-}: VaultActionsProps) => {
+export const VaultActions = ({ data }: VaultActionsProps) => {
+  const { address: connectedAddress } = useAccount();
+  const { usdcBalance, maxWithdraw, sharePrice, vaultDecimals, apy, refetch } = data;
+
+  // Component State
+  const [actionTab, setActionTab] = useState<"deposit" | "withdraw">("deposit");
+
+  // Deposit State
+  const [depositAmount, setDepositAmount] = useState("");
+  const [isMaxDeposit, setIsMaxDeposit] = useState(false);
+
+  // Withdraw State
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isMaxWithdraw, setIsMaxWithdraw] = useState(false);
+
+  // Hooks
+  const { permitDeposit, isProcessing: isDepositing } = usePermitDeposit();
+  const { writeContractAsync: writeVaultAsync } = useScaffoldWriteContract({ contractName: "vault" });
+
+  // Handlers
+  const handleDeposit = async () => {
+    if (!depositAmount || !connectedAddress) return;
+
+    try {
+      await permitDeposit(depositAmount, DEFAULT_ASSET_DECIMALS, isMaxDeposit, usdcBalance);
+      setDepositAmount("");
+      setIsMaxDeposit(false);
+      await refetch();
+    } catch (error) {
+      console.error("Error depositing:", error);
+    }
+  };
+
+  const handleWithdraw = async () => {
+    if (!withdrawAmount || !connectedAddress) return;
+
+    try {
+      setIsWithdrawing(true);
+      let amount;
+      if (isMaxWithdraw && maxWithdraw) {
+        amount = maxWithdraw;
+      } else {
+        amount = parseUnits(withdrawAmount, DEFAULT_ASSET_DECIMALS);
+      }
+      await writeVaultAsync({
+        functionName: "withdraw",
+        args: [amount, connectedAddress, connectedAddress],
+      });
+      setWithdrawAmount("");
+      setIsMaxWithdraw(false);
+      await refetch();
+    } catch (error) {
+      console.error("Error withdrawing:", error);
+    } finally {
+      setIsWithdrawing(false);
+    }
+  };
+
   return (
     <div className="lg:col-span-1">
       <div className="bg-base-100 rounded-xl p-4 shadow-sm sticky top-4">
@@ -75,9 +98,9 @@ export const VaultActions = ({
             usdcBalance={usdcBalance}
             isDepositing={isDepositing}
             handleDeposit={handleDeposit}
-            formatAmount={formatAmount}
-            assetDecimals={assetDecimals}
+            assetDecimals={DEFAULT_ASSET_DECIMALS}
             setIsMaxDeposit={setIsMaxDeposit}
+            apy={apy}
           />
         )}
 
@@ -90,8 +113,7 @@ export const VaultActions = ({
             maxWithdraw={maxWithdraw}
             isWithdrawing={isWithdrawing}
             handleWithdraw={handleWithdraw}
-            formatAmount={formatAmount}
-            assetDecimals={assetDecimals}
+            assetDecimals={DEFAULT_ASSET_DECIMALS}
             sharePrice={sharePrice}
             vaultDecimals={vaultDecimals}
             setIsMaxWithdraw={setIsMaxWithdraw}

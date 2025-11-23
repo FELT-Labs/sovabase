@@ -1,4 +1,5 @@
 import { formatUnits, parseUnits } from "viem";
+import { formatAmount } from "~~/utils/sovabase";
 
 interface WithdrawFormProps {
   connectedAddress?: string;
@@ -7,7 +8,6 @@ interface WithdrawFormProps {
   maxWithdraw?: bigint;
   isWithdrawing: boolean;
   handleWithdraw: () => Promise<void>;
-  formatAmount: (value: bigint | undefined, decimals: number | undefined) => string;
   assetDecimals: number;
   sharePrice: number;
   vaultDecimals?: number;
@@ -21,7 +21,6 @@ export const WithdrawForm = ({
   maxWithdraw,
   isWithdrawing,
   handleWithdraw,
-  formatAmount,
   assetDecimals,
   sharePrice,
   vaultDecimals,

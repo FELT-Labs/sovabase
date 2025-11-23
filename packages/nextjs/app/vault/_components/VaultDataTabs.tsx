@@ -1,52 +1,33 @@
 import { Address } from "~~/components/scaffold-eth";
+import { VaultData } from "~~/hooks/sovabase/useVaultData";
+import { DEFAULT_ASSET_DECIMALS, formatAmount } from "~~/utils/sovabase";
 
 interface VaultDataTabsProps {
   activeTab: "position" | "overview" | "details";
   setActiveTab: (tab: "position" | "overview" | "details") => void;
   connectedAddress?: string;
-  // Position data
-  userAssets?: bigint;
-  userBalance?: bigint;
-  usdcBalance?: bigint;
-  maxDeposit?: bigint;
-  maxWithdraw?: bigint;
-  sharePrice: number;
-  // Overview data
-  totalAssets?: bigint;
-  totalSupply?: bigint;
-  vaultDecimals?: number;
-  // Details data
-  vaultName?: string;
-  vaultSymbol?: string;
-  feePercentage: number;
-  feeRecipient?: string;
-  vaultAsset?: string;
-  // Formatting
-  formatAmount: (value: bigint | undefined, decimals: number | undefined) => string;
-  assetDecimals: number;
+  data: VaultData;
 }
 
-export const VaultDataTabs = ({
-  activeTab,
-  setActiveTab,
-  connectedAddress,
-  userAssets,
-  userBalance,
-  usdcBalance,
-  maxDeposit,
-  maxWithdraw,
-  sharePrice,
-  totalAssets,
-  totalSupply,
-  vaultDecimals,
-  vaultName,
-  vaultSymbol,
-  feePercentage,
-  feeRecipient,
-  vaultAsset,
-  formatAmount,
-  assetDecimals,
-}: VaultDataTabsProps) => {
+export const VaultDataTabs = ({ activeTab, setActiveTab, connectedAddress, data }: VaultDataTabsProps) => {
+  const {
+    userAssets,
+    userBalance,
+    usdcBalance,
+    maxDeposit,
+    maxWithdraw,
+    sharePrice,
+    totalAssets,
+    totalSupply,
+    vaultDecimals,
+    vaultName,
+    vaultSymbol,
+    feePercentage,
+    feeRecipient,
+    vaultAsset,
+    apy,
+  } = data;
+
   return (
     <div className="lg:col-span-2">
       {/* Tabs */}
@@ -79,7 +60,7 @@ export const VaultDataTabs = ({
             <div>
               <h3 className="text-sm font-medium text-base-content/60 mb-2">My Deposit (USDC)</h3>
               <p className="text-3xl font-bold">
-                {connectedAddress ? formatAmount(userAssets, assetDecimals) : "0.00"}
+                {connectedAddress ? formatAmount(userAssets, DEFAULT_ASSET_DECIMALS) : "0.00"}
               </p>
               <p className="text-xs text-base-content/50 mt-1">
                 {connectedAddress ? formatAmount(userBalance, vaultDecimals) : "0.00"} shares
@@ -92,19 +73,19 @@ export const VaultDataTabs = ({
               <div>
                 <h4 className="text-xs text-base-content/60 mb-1">USDC Balance</h4>
                 <p className="text-lg font-semibold">
-                  {connectedAddress ? formatAmount(usdcBalance, assetDecimals) : "0.00"}
+                  {connectedAddress ? formatAmount(usdcBalance, DEFAULT_ASSET_DECIMALS) : "0.00"}
                 </p>
               </div>
               <div>
                 <h4 className="text-xs text-base-content/60 mb-1">Max Deposit</h4>
                 <p className="text-lg font-semibold">
-                  {connectedAddress ? formatAmount(maxDeposit, assetDecimals) : "0.00"}
+                  {connectedAddress ? formatAmount(maxDeposit, DEFAULT_ASSET_DECIMALS) : "0.00"}
                 </p>
               </div>
               <div>
                 <h4 className="text-xs text-base-content/60 mb-1">Max Withdraw</h4>
                 <p className="text-lg font-semibold">
-                  {connectedAddress ? formatAmount(maxWithdraw, assetDecimals) : "0.00"}
+                  {connectedAddress ? formatAmount(maxWithdraw, DEFAULT_ASSET_DECIMALS) : "0.00"}
                 </p>
               </div>
               <div>
@@ -121,7 +102,7 @@ export const VaultDataTabs = ({
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <h4 className="text-xs text-base-content/60 mb-1">Total Assets</h4>
-                <p className="text-xl font-semibold">{formatAmount(totalAssets, assetDecimals)}</p>
+                <p className="text-xl font-semibold">{formatAmount(totalAssets, DEFAULT_ASSET_DECIMALS)}</p>
                 <p className="text-xs text-base-content/50">USDC</p>
               </div>
               <div>
@@ -136,7 +117,7 @@ export const VaultDataTabs = ({
               </div>
               <div>
                 <h4 className="text-xs text-base-content/60 mb-1">APY</h4>
-                <p className="text-xl font-semibold">9.45%</p>
+                <p className="text-xl font-semibold">{apy ? (apy * 100).toFixed(2) : "0.00"}%</p>
                 <p className="text-xs text-base-content/50">Current</p>
               </div>
             </div>

@@ -1,4 +1,5 @@
 import { formatUnits } from "viem";
+import { formatAmount } from "~~/utils/sovabase";
 
 interface DepositFormProps {
   connectedAddress?: string;
@@ -7,9 +8,9 @@ interface DepositFormProps {
   usdcBalance?: bigint;
   isDepositing: boolean;
   handleDeposit: () => Promise<void>;
-  formatAmount: (value: bigint | undefined, decimals: number | undefined) => string;
   assetDecimals: number;
   setIsMaxDeposit: (isMax: boolean) => void;
+  apy?: number;
 }
 
 export const DepositForm = ({
@@ -19,9 +20,9 @@ export const DepositForm = ({
   usdcBalance,
   isDepositing,
   handleDeposit,
-  formatAmount,
   assetDecimals,
   setIsMaxDeposit,
+  apy,
 }: DepositFormProps) => {
   return (
     <div className="space-y-3">
@@ -63,15 +64,19 @@ export const DepositForm = ({
         <div className="text-xs space-y-1">
           <div className="flex justify-between">
             <span className="text-base-content/60">APY</span>
-            <span className="font-medium">9.45%</span>
+            <span className="font-medium">{apy !== undefined ? `${(apy * 100).toFixed(2)}%` : "..."}</span>
           </div>
           <div className="flex justify-between">
             <span className="text-base-content/60">Projected monthly earnings</span>
-            <span className="font-medium">${(parseFloat(depositAmount) * 0.0945 * (1 / 12)).toFixed(2)}</span>
+            <span className="font-medium">
+              {apy !== undefined ? `$${(parseFloat(depositAmount) * apy * (1 / 12)).toFixed(2)}` : "..."}
+            </span>
           </div>
           <div className="flex justify-between">
             <span className="text-base-content/60">Projected yearly earnings</span>
-            <span className="font-medium">${(parseFloat(depositAmount) * 0.0945).toFixed(2)}</span>
+            <span className="font-medium">
+              {apy !== undefined ? `$${(parseFloat(depositAmount) * apy).toFixed(2)}` : "..."}
+            </span>
           </div>
         </div>
       )}
