@@ -109,7 +109,7 @@ export const VaultDataTabs = ({
               </div>
               <div>
                 <h4 className="text-xs text-base-content/60 mb-1">Share Price</h4>
-                <p className="text-lg font-semibold">{sharePrice.toFixed(6)}</p>
+                <p className="text-lg font-semibold">{sharePrice.toFixed(2)}</p>
               </div>
             </div>
           </div>
@@ -131,7 +131,7 @@ export const VaultDataTabs = ({
               </div>
               <div>
                 <h4 className="text-xs text-base-content/60 mb-1">Share Price</h4>
-                <p className="text-xl font-semibold">{sharePrice.toFixed(6)}</p>
+                <p className="text-xl font-semibold">{sharePrice.toFixed(2)}</p>
                 <p className="text-xs text-base-content/50">USDC per share</p>
               </div>
               <div>
@@ -157,7 +157,7 @@ export const VaultDataTabs = ({
               </div>
               <div>
                 <h4 className="text-xs text-base-content/60 mb-1">Fee</h4>
-                <p className="text-sm font-medium">{feePercentage.toFixed(4)}%</p>
+                <p className="text-sm font-medium">{feePercentage.toFixed(2)}%</p>
               </div>
               <div>
                 <h4 className="text-xs text-base-content/60 mb-1">Fee Recipient</h4>

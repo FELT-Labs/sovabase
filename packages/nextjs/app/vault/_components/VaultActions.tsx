@@ -25,6 +25,8 @@ interface VaultActionsProps {
   assetDecimals: number;
   sharePrice: number;
   vaultDecimals?: number;
+  setIsMaxDeposit: (isMax: boolean) => void;
+  setIsMaxWithdraw: (isMax: boolean) => void;
 }
 
 export const VaultActions = ({
@@ -48,6 +50,8 @@ export const VaultActions = ({
   assetDecimals,
   sharePrice,
   vaultDecimals,
+  setIsMaxDeposit,
+  setIsMaxWithdraw,
 }: VaultActionsProps) => {
   return (
     <div className="lg:col-span-1">
@@ -82,6 +86,7 @@ export const VaultActions = ({
             handleDeposit={handleDeposit}
             formatAmount={formatAmount}
             assetDecimals={assetDecimals}
+            setIsMaxDeposit={setIsMaxDeposit}
           />
         )}
 
@@ -98,6 +103,7 @@ export const VaultActions = ({
             assetDecimals={assetDecimals}
             sharePrice={sharePrice}
             vaultDecimals={vaultDecimals}
+            setIsMaxWithdraw={setIsMaxWithdraw}
           />
         )}
       </div>

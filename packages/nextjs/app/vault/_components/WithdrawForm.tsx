@@ -11,6 +11,7 @@ interface WithdrawFormProps {
   assetDecimals: number;
   sharePrice: number;
   vaultDecimals?: number;
+  setIsMaxWithdraw: (isMax: boolean) => void;
 }
 
 export const WithdrawForm = ({
@@ -24,6 +25,7 @@ export const WithdrawForm = ({
   assetDecimals,
   sharePrice,
   vaultDecimals,
+  setIsMaxWithdraw,
 }: WithdrawFormProps) => {
   return (
     <div className="space-y-3">
@@ -35,12 +37,21 @@ export const WithdrawForm = ({
             placeholder="0.00"
             className="input input-sm input-bordered w-full"
             value={withdrawAmount}
-            onChange={e => setWithdrawAmount(e.target.value)}
+            onChange={e => {
+              setWithdrawAmount(e.target.value);
+              setIsMaxWithdraw(false);
+            }}
             disabled={!connectedAddress}
           />
           <button
             className="btn btn-sm btn-ghost"
-            onClick={() => setWithdrawAmount(formatUnits(maxWithdraw || 0n, assetDecimals).toString())}
+            onClick={() => {
+              if (!maxWithdraw) return;
+              const maxVal = parseFloat(formatUnits(maxWithdraw, assetDecimals));
+              const floored = Math.floor(maxVal * 100) / 100;
+              setWithdrawAmount(floored.toFixed(2));
+              setIsMaxWithdraw(true);
+            }}
             disabled={!connectedAddress}
           >
             MAX

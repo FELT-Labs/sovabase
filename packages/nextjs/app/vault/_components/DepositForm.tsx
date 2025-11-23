@@ -12,6 +12,7 @@ interface DepositFormProps {
   handleDeposit: () => Promise<void>;
   formatAmount: (value: bigint | undefined, decimals: number | undefined) => string;
   assetDecimals: number;
+  setIsMaxDeposit: (isMax: boolean) => void;
 }
 
 export const DepositForm = ({
@@ -26,6 +27,7 @@ export const DepositForm = ({
   handleDeposit,
   formatAmount,
   assetDecimals,
+  setIsMaxDeposit,
 }: DepositFormProps) => {
   return (
     <div className="space-y-3">
@@ -37,12 +39,21 @@ export const DepositForm = ({
             placeholder="0.00"
             className="input input-sm input-bordered w-full"
             value={depositAmount}
-            onChange={e => setDepositAmount(e.target.value)}
+            onChange={e => {
+              setDepositAmount(e.target.value);
+              setIsMaxDeposit(false);
+            }}
             disabled={!connectedAddress}
           />
           <button
             className="btn btn-sm btn-ghost"
-            onClick={() => setDepositAmount(formatUnits(usdcBalance || 0n, assetDecimals).toString())}
+            onClick={() => {
+              if (!usdcBalance) return;
+              const maxVal = parseFloat(formatUnits(usdcBalance, assetDecimals));
+              const floored = Math.floor(maxVal * 100) / 100;
+              setDepositAmount(floored.toFixed(2));
+              setIsMaxDeposit(true);
+            }}
             disabled={!connectedAddress}
           >
             MAX

@@ -17,6 +17,8 @@ const VaultDetailPage: NextPage = () => {
   const [isApproving, setIsApproving] = useState(false);
   const [isDepositing, setIsDepositing] = useState(false);
   const [isWithdrawing, setIsWithdrawing] = useState(false);
+  const [isMaxDeposit, setIsMaxDeposit] = useState(false);
+  const [isMaxWithdraw, setIsMaxWithdraw] = useState(false);
 
   // Determine asset decimals (USDC has 6 decimals)
   const inferredAssetDecimals = 6;
@@ -114,9 +116,12 @@ const VaultDetailPage: NextPage = () => {
   // Format numbers for display
   const formatAmount = (value: bigint | undefined, decimalsValue: number | undefined) => {
     if (value === undefined || decimalsValue === undefined) return "...";
-    return parseFloat(formatUnits(value, decimalsValue)).toLocaleString(undefined, {
+    const floatVal = parseFloat(formatUnits(value, decimalsValue));
+    // Floor to 2 decimals to avoid showing more than available
+    const floored = Math.floor(floatVal * 100) / 100;
+    return floored.toLocaleString(undefined, {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
+      maximumFractionDigits: 2,
     });
   };
 
@@ -136,7 +141,12 @@ const VaultDetailPage: NextPage = () => {
 
     try {
       setIsApproving(true);
-      const amount = parseUnits(depositAmount, inferredAssetDecimals);
+      let amount;
+      if (isMaxDeposit && usdcBalance) {
+        amount = usdcBalance;
+      } else {
+        amount = parseUnits(depositAmount, inferredAssetDecimals);
+      }
       await writeUsdcAsync({
         functionName: "approve",
         args: [vaultAddress, amount],
@@ -155,12 +165,18 @@ const VaultDetailPage: NextPage = () => {
 
     try {
       setIsDepositing(true);
-      const amount = parseUnits(depositAmount, inferredAssetDecimals);
+      let amount;
+      if (isMaxDeposit && usdcBalance) {
+        amount = usdcBalance;
+      } else {
+        amount = parseUnits(depositAmount, inferredAssetDecimals);
+      }
       await writeVaultAsync({
         functionName: "deposit",
         args: [amount, connectedAddress],
       });
       setDepositAmount("");
+      setIsMaxDeposit(false);
       await Promise.all([
         refetchTotalAssets(),
         refetchTotalSupply(),
@@ -182,12 +198,18 @@ const VaultDetailPage: NextPage = () => {
 
     try {
       setIsWithdrawing(true);
-      const amount = parseUnits(withdrawAmount, inferredAssetDecimals);
+      let amount;
+      if (isMaxWithdraw && maxWithdraw) {
+        amount = maxWithdraw;
+      } else {
+        amount = parseUnits(withdrawAmount, inferredAssetDecimals);
+      }
       await writeVaultAsync({
         functionName: "withdraw",
         args: [amount, connectedAddress, connectedAddress],
       });
       setWithdrawAmount("");
+      setIsMaxWithdraw(false);
       await Promise.all([
         refetchTotalAssets(),
         refetchTotalSupply(),
@@ -203,7 +225,12 @@ const VaultDetailPage: NextPage = () => {
   };
 
   // Check if approval is needed
-  const depositAmountBigInt = depositAmount ? parseUnits(depositAmount, inferredAssetDecimals) : 0n;
+  let depositAmountBigInt = 0n;
+  if (isMaxDeposit && usdcBalance) {
+    depositAmountBigInt = usdcBalance;
+  } else {
+    depositAmountBigInt = depositAmount ? parseUnits(depositAmount, inferredAssetDecimals) : 0n;
+  }
   const needsApproval = depositAmountBigInt > 0n && (usdcAllowance || 0n) < depositAmountBigInt;
 
   return (
@@ -263,6 +290,8 @@ const VaultDetailPage: NextPage = () => {
               assetDecimals={inferredAssetDecimals}
               sharePrice={sharePrice}
               vaultDecimals={vaultDecimals}
+              setIsMaxDeposit={setIsMaxDeposit}
+              setIsMaxWithdraw={setIsMaxWithdraw}
             />
           </div>
         </div>

@@ -37,7 +37,7 @@ const Home: NextPage = () => {
     if (value === undefined || decimalsValue === undefined) return "...";
     return parseFloat(formatUnits(value, decimalsValue)).toLocaleString(undefined, {
       minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
+      maximumFractionDigits: 2,
     });
   };
 
