@@ -12,3 +12,5 @@ export const formatAmount = (value: bigint | undefined, decimalsValue: number | 
     maximumFractionDigits: 2,
   });
 };
+
+export * from "./safe";
