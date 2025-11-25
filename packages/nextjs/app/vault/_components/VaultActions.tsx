@@ -3,8 +3,8 @@ import { DepositForm } from "./DepositForm";
 import { WithdrawForm } from "./WithdrawForm";
 import { parseUnits } from "viem";
 import { useAccount } from "wagmi";
-import { usePermitDeposit, useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { VaultData } from "~~/hooks/sovabase/useVaultData";
+import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
+import { VaultData, useVaultDeposit } from "~~/hooks/sovabase";
 import { DEFAULT_ASSET_DECIMALS } from "~~/utils/sovabase";
 
 interface VaultActionsProps {
@@ -28,7 +28,7 @@ export const VaultActions = ({ data }: VaultActionsProps) => {
   const [isMaxWithdraw, setIsMaxWithdraw] = useState(false);
 
   // Hooks
-  const { permitDeposit, isProcessing: isDepositing } = usePermitDeposit();
+  const { deposit, isProcessing: isDepositing, currentStep } = useVaultDeposit();
   const { writeContractAsync: writeVaultAsync } = useScaffoldWriteContract({ contractName: "vault" });
 
   // Handlers
@@ -36,7 +36,7 @@ export const VaultActions = ({ data }: VaultActionsProps) => {
     if (!depositAmount || !connectedAddress) return;
 
     try {
-      await permitDeposit(depositAmount, DEFAULT_ASSET_DECIMALS, isMaxDeposit, usdcBalance);
+      await deposit(depositAmount, DEFAULT_ASSET_DECIMALS, isMaxDeposit, usdcBalance);
       setDepositAmount("");
       setIsMaxDeposit(false);
       await refetch();
@@ -101,6 +101,7 @@ export const VaultActions = ({ data }: VaultActionsProps) => {
             assetDecimals={DEFAULT_ASSET_DECIMALS}
             setIsMaxDeposit={setIsMaxDeposit}
             apy={apy}
+            depositStep={currentStep}
           />
         )}
 

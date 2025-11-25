@@ -1,4 +1,5 @@
 import { formatUnits } from "viem";
+import { DepositStep } from "~~/hooks/sovabase";
 import { formatAmount } from "~~/utils/sovabase";
 
 interface DepositFormProps {
@@ -11,7 +12,23 @@ interface DepositFormProps {
   assetDecimals: number;
   setIsMaxDeposit: (isMax: boolean) => void;
   apy?: number;
+  depositStep: DepositStep;
 }
+
+const getDepositButtonText = (step: DepositStep) => {
+  switch (step) {
+    case "approving":
+      return "Approving...";
+    case "depositing":
+      return "Depositing...";
+    case "completed":
+      return "Deposit";
+    case "error":
+      return "Try Again";
+    default:
+      return "Deposit";
+  }
+};
 
 export const DepositForm = ({
   connectedAddress,
@@ -23,6 +40,7 @@ export const DepositForm = ({
   assetDecimals,
   setIsMaxDeposit,
   apy,
+  depositStep,
 }: DepositFormProps) => {
   return (
     <div className="space-y-3">
@@ -95,10 +113,10 @@ export const DepositForm = ({
             {isDepositing ? (
               <>
                 <span className="loading loading-spinner loading-xs"></span>
-                Depositing...
+                {getDepositButtonText(depositStep)}
               </>
             ) : (
-              <>Deposit</>
+              <>{getDepositButtonText(depositStep)}</>
             )}
           </button>
         )}
