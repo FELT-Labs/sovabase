@@ -5,7 +5,7 @@ interface VaultCardProps {
   name: string;
   symbol: string;
   totalAssets: bigint | undefined;
-  userBalance: bigint | undefined;
+  userAssets: bigint | undefined;
   decimals: number | undefined;
   assetDecimals: number;
   href: string;
@@ -18,7 +18,7 @@ export const VaultCard = ({
   name,
   symbol,
   totalAssets,
-  userBalance,
+  userAssets,
   decimals,
   assetDecimals,
   href,
@@ -44,7 +44,11 @@ export const VaultCard = ({
 
       <div className="grid grid-cols-2 gap-2">
         <div className="bg-base-200 rounded-lg p-2">
-          <p className="text-xs text-base-content/60">Total Assets</p>
+          <p className="text-xs text-base-content/60">
+            <span className="tooltip tooltip-top tooltip-accent" data-tip="The total assets deposited in the vault">
+              Deposits
+            </span>
+          </p>
           <p className="text-lg font-bold">{isComingSoon ? "--" : formatAmount(totalAssets, assetDecimals)}</p>
           <p className="text-xs text-base-content/50">{assetName}</p>
         </div>
@@ -52,9 +56,9 @@ export const VaultCard = ({
         <div className="bg-base-200 rounded-lg p-2">
           <p className="text-xs text-base-content/60">Your Balance</p>
           <p className="text-lg font-bold">
-            {isComingSoon ? "--" : userBalance ? formatAmount(userBalance, decimals) : "0.00"}
+            {isComingSoon ? "--" : userAssets ? formatAmount(userAssets, decimals) : "0.00"}
           </p>
-          <p className="text-xs text-base-content/50">Shares</p>
+          <p className="text-xs text-base-content/50">{assetName}</p>
         </div>
       </div>
 

@@ -8,7 +8,7 @@ import { DEFAULT_ASSET_DECIMALS } from "~~/utils/sovabase";
 
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
-  const { vaultSymbol, totalAssets, vaultDecimals, userBalance } = useVaultData();
+  const { vaultSymbol, totalAssets, userAssets } = useVaultData();
 
   return (
     <>
@@ -41,8 +41,8 @@ const Home: NextPage = () => {
               name="USDC Vault"
               symbol={vaultSymbol || ""}
               totalAssets={totalAssets}
-              userBalance={connectedAddress ? userBalance : undefined}
-              decimals={vaultDecimals}
+              userAssets={connectedAddress ? userAssets : undefined}
+              decimals={DEFAULT_ASSET_DECIMALS}
               assetDecimals={DEFAULT_ASSET_DECIMALS}
               href="/vault/usdc"
               icon="💵"
@@ -54,7 +54,7 @@ const Home: NextPage = () => {
               name="ETH Vault"
               symbol="svETH"
               totalAssets={undefined}
-              userBalance={undefined}
+              userAssets={undefined}
               decimals={18}
               assetDecimals={18}
               href="#"
