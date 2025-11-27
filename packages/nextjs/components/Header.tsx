@@ -20,6 +20,10 @@ export const menuLinks: HeaderMenuLink[] = [
     label: "About",
     href: "https://sovabase.com/",
   },
+  {
+    label: "Docs",
+    href: "https://docs.sovabase.com/",
+  },
 ];
 
 export const HeaderMenuLinks = () => {
