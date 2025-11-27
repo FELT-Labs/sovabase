@@ -2,13 +2,14 @@
 
 import { useState } from "react";
 import { VaultActions, VaultDataTabs, VaultHeader, VaultMetrics } from "../_components";
+import type { VaultTab } from "../_components/VaultDataTabs";
 import type { NextPage } from "next";
 import { useAccount } from "wagmi";
 import { useVaultData } from "~~/hooks/sovabase/useVaultData";
 
 const VaultDetailPage: NextPage = () => {
   const { address: connectedAddress } = useAccount();
-  const [activeTab, setActiveTab] = useState<"position" | "overview" | "details">("position");
+  const [activeTab, setActiveTab] = useState<VaultTab>("position");
   const vaultData = useVaultData();
 
   return (

@@ -5,6 +5,7 @@ import { useDeployedContractInfo, useScaffoldReadContract } from "~~/hooks/scaff
 import { DEFAULT_ASSET_DECIMALS } from "~~/utils/sovabase";
 
 export interface VaultData {
+  vaultAddress?: string;
   vaultName?: string;
   vaultSymbol?: string;
   vaultAsset?: string;
@@ -125,6 +126,7 @@ export const useVaultData = (vaultContractName: "vault" = "vault", usdcContractN
   };
 
   return {
+    vaultAddress: vaultContractInfo?.address,
     vaultName,
     vaultSymbol,
     vaultAsset,

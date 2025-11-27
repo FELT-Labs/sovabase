@@ -1,31 +1,32 @@
+import { VaultHistoryChart } from "./VaultHistoryChart";
 import { Address } from "~~/components/scaffold-eth";
 import { VaultData } from "~~/hooks/sovabase/useVaultData";
 import { DEFAULT_ASSET_DECIMALS, formatAmount } from "~~/utils/sovabase";
 
+export type VaultTab = "position" | "overview" | "details";
+
 interface VaultDataTabsProps {
-  activeTab: "position" | "overview" | "details";
-  setActiveTab: (tab: "position" | "overview" | "details") => void;
+  activeTab: VaultTab;
+  setActiveTab: (tab: VaultTab) => void;
   connectedAddress?: string;
   data: VaultData;
 }
 
 export const VaultDataTabs = ({ activeTab, setActiveTab, connectedAddress, data }: VaultDataTabsProps) => {
   const {
+    vaultAddress,
     userAssets,
     userBalance,
     usdcBalance,
     maxDeposit,
     maxWithdraw,
     sharePrice,
-    totalAssets,
-    totalSupply,
     vaultDecimals,
     vaultName,
     vaultSymbol,
     feePercentage,
     feeRecipient,
     vaultAsset,
-    apy,
   } = data;
 
   return (
@@ -53,9 +54,9 @@ export const VaultDataTabs = ({ activeTab, setActiveTab, connectedAddress, data 
       </div>
 
       {/* Tab Content */}
-      <div className="bg-base-100 rounded-xl p-4 shadow-sm min-h-[400px]">
-        {/* Your Position Tab */}
-        {activeTab === "position" && (
+      {/* Your Position Tab */}
+      {activeTab === "position" && (
+        <div className="bg-base-100 rounded-xl p-4 shadow-sm min-h-[400px]">
           <div className="space-y-4">
             <div>
               <h3 className="text-sm font-medium text-base-content/60 mb-2">My Deposit (USDC)</h3>
@@ -94,38 +95,24 @@ export const VaultDataTabs = ({ activeTab, setActiveTab, connectedAddress, data 
               </div>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* Overview Tab */}
-        {activeTab === "overview" && (
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h4 className="text-xs text-base-content/60 mb-1">Total Assets</h4>
-                <p className="text-xl font-semibold">{formatAmount(totalAssets, DEFAULT_ASSET_DECIMALS)}</p>
-                <p className="text-xs text-base-content/50">USDC</p>
-              </div>
-              <div>
-                <h4 className="text-xs text-base-content/60 mb-1">Total Supply</h4>
-                <p className="text-xl font-semibold">{formatAmount(totalSupply, vaultDecimals)}</p>
-                <p className="text-xs text-base-content/50">Shares</p>
-              </div>
-              <div>
-                <h4 className="text-xs text-base-content/60 mb-1">Share Price</h4>
-                <p className="text-xl font-semibold">{sharePrice.toFixed(2)}</p>
-                <p className="text-xs text-base-content/50">USDC per share</p>
-              </div>
-              <div>
-                <h4 className="text-xs text-base-content/60 mb-1">APY</h4>
-                <p className="text-xl font-semibold">{apy ? (apy * 100).toFixed(2) : "0.00"}%</p>
-                <p className="text-xs text-base-content/50">Current</p>
-              </div>
-            </div>
+      {/* Overview Tab - APY and Deposits Charts as separate cards */}
+      {activeTab === "overview" && (
+        <div className="space-y-4">
+          <div className="bg-base-100 rounded-xl p-4 shadow-sm">
+            <VaultHistoryChart vaultAddress={vaultAddress} chartType="apy" />
           </div>
-        )}
+          <div className="bg-base-100 rounded-xl p-4 shadow-sm">
+            <VaultHistoryChart vaultAddress={vaultAddress} chartType="deposits" />
+          </div>
+        </div>
+      )}
 
-        {/* Details Tab */}
-        {activeTab === "details" && (
+      {/* Details Tab */}
+      {activeTab === "details" && (
+        <div className="bg-base-100 rounded-xl p-4 shadow-sm min-h-[400px]">
           <div className="space-y-4">
             <div className="grid grid-cols-1 gap-3">
               <div>
@@ -150,8 +137,8 @@ export const VaultDataTabs = ({ activeTab, setActiveTab, connectedAddress, data 
               </div>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
 };
