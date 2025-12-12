@@ -5,7 +5,7 @@ import { useDeployedContractInfo, useScaffoldReadContract, useScaffoldWriteContr
 
 export type DepositStep = "idle" | "approving" | "depositing" | "completed" | "error";
 
-export function useVaultDeposit() {
+export function useUsdcVaultDeposit() {
   const { address: connectedAddress } = useAccount();
   const publicClient = usePublicClient();
   const [currentStep, setCurrentStep] = useState<DepositStep>("idle");

@@ -1,16 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import { VaultActions, VaultDataTabs, VaultHeader, VaultMetrics } from "../_components";
-import type { VaultTab } from "../_components/VaultDataTabs";
+import { VaultActions, VaultDataTabs, VaultHeader, VaultMetrics } from "./_components";
+import type { VaultTab } from "./_components/VaultDataTabs";
 import type { NextPage } from "next";
 import { useAccount } from "wagmi";
-import { useVaultData } from "~~/hooks/sovabase/useVaultData";
+import { useUsdcVaultData } from "~~/hooks/sovabase/useUsdcVaultData";
 
-const VaultDetailPage: NextPage = () => {
+const UsdcVaultPage: NextPage = () => {
   const { address: connectedAddress } = useAccount();
   const [activeTab, setActiveTab] = useState<VaultTab>("position");
-  const vaultData = useVaultData();
+  const vaultData = useUsdcVaultData();
 
   return (
     <>
@@ -36,4 +36,4 @@ const VaultDetailPage: NextPage = () => {
   );
 };
 
-export default VaultDetailPage;
+export default UsdcVaultPage;

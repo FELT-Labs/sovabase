@@ -2,9 +2,9 @@ import { formatUnits } from "viem";
 import { useAccount } from "wagmi";
 import useMorphoVault from "~~/hooks/morpho/useMorphoVault";
 import { useDeployedContractInfo, useScaffoldReadContract } from "~~/hooks/scaffold-eth";
-import { DEFAULT_ASSET_DECIMALS } from "~~/utils/sovabase";
+import { DEFAULT_USDC_DECIMALS } from "~~/utils/sovabase";
 
-export interface VaultData {
+export interface UsdcVaultData {
   vaultAddress?: string;
   vaultName?: string;
   vaultSymbol?: string;
@@ -25,91 +25,91 @@ export interface VaultData {
   refetch: () => Promise<void>;
 }
 
-export const useVaultData = (vaultContractName: "vault" = "vault", usdcContractName: "usdc" = "usdc"): VaultData => {
+export const useUsdcVaultData = (): UsdcVaultData => {
   const { address: connectedAddress } = useAccount();
 
   // Vault metadata
   const { data: vaultName } = useScaffoldReadContract({
-    contractName: vaultContractName,
+    contractName: "vault",
     functionName: "name",
   });
 
   const { data: vaultSymbol } = useScaffoldReadContract({
-    contractName: vaultContractName,
+    contractName: "vault",
     functionName: "symbol",
   });
 
   const { data: vaultAsset } = useScaffoldReadContract({
-    contractName: vaultContractName,
+    contractName: "vault",
     functionName: "asset",
   });
 
   const { data: vaultDecimals } = useScaffoldReadContract({
-    contractName: vaultContractName,
+    contractName: "vault",
     functionName: "decimals",
   });
 
   const { data: vaultFee } = useScaffoldReadContract({
-    contractName: vaultContractName,
+    contractName: "vault",
     functionName: "fee",
   });
 
   const { data: feeRecipient } = useScaffoldReadContract({
-    contractName: vaultContractName,
+    contractName: "vault",
     functionName: "feeRecipient",
   });
 
   // Vault Stats
   const { data: totalAssets, refetch: refetchTotalAssets } = useScaffoldReadContract({
-    contractName: vaultContractName,
+    contractName: "vault",
     functionName: "totalAssets",
   });
 
   const { data: totalSupply, refetch: refetchTotalSupply } = useScaffoldReadContract({
-    contractName: vaultContractName,
+    contractName: "vault",
     functionName: "totalSupply",
   });
 
   // User Data
   const { data: userBalance, refetch: refetchUserBalance } = useScaffoldReadContract({
-    contractName: vaultContractName,
+    contractName: "vault",
     functionName: "balanceOf",
     args: [connectedAddress],
   });
 
   const { data: userAssets, refetch: refetchUserAssets } = useScaffoldReadContract({
-    contractName: vaultContractName,
+    contractName: "vault",
     functionName: "convertToAssets",
     args: [userBalance],
   });
 
   const { data: maxDeposit } = useScaffoldReadContract({
-    contractName: vaultContractName,
+    contractName: "vault",
     functionName: "maxDeposit",
     args: [connectedAddress],
   });
 
   const { data: maxWithdraw } = useScaffoldReadContract({
-    contractName: vaultContractName,
+    contractName: "vault",
     functionName: "maxWithdraw",
     args: [connectedAddress],
   });
 
   // USDC Data
   const { data: usdcBalance, refetch: refetchUsdcBalance } = useScaffoldReadContract({
-    contractName: usdcContractName,
+    contractName: "usdc",
     functionName: "balanceOf",
     args: [connectedAddress],
   });
 
   // Morpho APY
-  const { data: vaultContractInfo } = useDeployedContractInfo(vaultContractName);
+  const { data: vaultContractInfo } = useDeployedContractInfo("vault");
   const { data: morphoData } = useMorphoVault(vaultContractInfo?.address);
 
   // Derived Data
   const sharePrice =
     totalAssets && totalSupply && totalSupply > 0n
-      ? parseFloat(formatUnits(totalAssets, DEFAULT_ASSET_DECIMALS)) /
+      ? parseFloat(formatUnits(totalAssets, DEFAULT_USDC_DECIMALS)) /
         parseFloat(formatUnits(totalSupply, vaultDecimals || 18))
       : 1;
 

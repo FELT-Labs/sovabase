@@ -1,2 +1,2 @@
-export * from "./useVaultData";
-export * from "./useVaultDeposit";
+export * from "./useUsdcVaultData";
+export * from "./useUsdcVaultDeposit";

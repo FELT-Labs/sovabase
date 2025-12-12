@@ -5,8 +5,8 @@ import { VaultHistoryChart } from "./VaultHistoryChart";
 import { formatUnits } from "viem";
 import { Address } from "~~/components/scaffold-eth";
 import { useMorphoUserPosition } from "~~/hooks/morpho/useMorphoUserPosition";
-import { VaultData } from "~~/hooks/sovabase/useVaultData";
-import { DEFAULT_ASSET_DECIMALS, formatAmount } from "~~/utils/sovabase";
+import { UsdcVaultData } from "~~/hooks/sovabase/useUsdcVaultData";
+import { DEFAULT_USDC_DECIMALS, formatAmount } from "~~/utils/sovabase";
 
 export type VaultTab = "position" | "overview" | "details";
 
@@ -14,7 +14,7 @@ interface VaultDataTabsProps {
   activeTab: VaultTab;
   setActiveTab: (tab: VaultTab) => void;
   connectedAddress?: string;
-  data: VaultData;
+  data: UsdcVaultData;
 }
 
 export const VaultDataTabs = ({ activeTab, setActiveTab, connectedAddress, data }: VaultDataTabsProps) => {
@@ -48,7 +48,7 @@ export const VaultDataTabs = ({ activeTab, setActiveTab, connectedAddress, data 
       : 0;
 
   // Calculate estimated earnings
-  const userAssetsNumber = userAssets ? Number(formatUnits(userAssets, DEFAULT_ASSET_DECIMALS)) : 0;
+  const userAssetsNumber = userAssets ? Number(formatUnits(userAssets, DEFAULT_USDC_DECIMALS)) : 0;
   const dailyEarnings = apy ? (userAssetsNumber * apy) / 365 : 0;
   const monthlyEarnings = dailyEarnings * 30;
   const yearlyEarnings = apy ? userAssetsNumber * apy : 0;
@@ -92,7 +92,7 @@ export const VaultDataTabs = ({ activeTab, setActiveTab, connectedAddress, data 
             <div className="flex items-end justify-between mb-4">
               <div>
                 <p className="text-3xl font-bold">
-                  {connectedAddress ? formatAmount(userAssets, DEFAULT_ASSET_DECIMALS) : "0.00"}
+                  {connectedAddress ? formatAmount(userAssets, DEFAULT_USDC_DECIMALS) : "0.00"}
                   <span className="text-lg text-base-content/60 ml-1">USDC</span>
                 </p>
                 <p className="text-sm text-base-content/50 mt-1">
@@ -168,19 +168,19 @@ export const VaultDataTabs = ({ activeTab, setActiveTab, connectedAddress, data 
               <div>
                 <p className="text-xs text-base-content/50 mb-1">USDC Balance</p>
                 <p className="text-lg font-semibold">
-                  {connectedAddress ? formatAmount(usdcBalance, DEFAULT_ASSET_DECIMALS) : "0.00"}
+                  {connectedAddress ? formatAmount(usdcBalance, DEFAULT_USDC_DECIMALS) : "0.00"}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-base-content/50 mb-1">Max Deposit</p>
                 <p className="text-lg font-semibold">
-                  {connectedAddress ? formatAmount(maxDeposit, DEFAULT_ASSET_DECIMALS) : "0.00"}
+                  {connectedAddress ? formatAmount(maxDeposit, DEFAULT_USDC_DECIMALS) : "0.00"}
                 </p>
               </div>
               <div>
                 <p className="text-xs text-base-content/50 mb-1">Max Withdraw</p>
                 <p className="text-lg font-semibold">
-                  {connectedAddress ? formatAmount(maxWithdraw, DEFAULT_ASSET_DECIMALS) : "0.00"}
+                  {connectedAddress ? formatAmount(maxWithdraw, DEFAULT_USDC_DECIMALS) : "0.00"}
                 </p>
               </div>
             </div>

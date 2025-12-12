@@ -4,11 +4,11 @@ import { WithdrawForm } from "./WithdrawForm";
 import { parseUnits } from "viem";
 import { useAccount } from "wagmi";
 import { useScaffoldWriteContract } from "~~/hooks/scaffold-eth";
-import { VaultData, useVaultDeposit } from "~~/hooks/sovabase";
-import { DEFAULT_ASSET_DECIMALS } from "~~/utils/sovabase";
+import { UsdcVaultData, useUsdcVaultDeposit } from "~~/hooks/sovabase";
+import { DEFAULT_USDC_DECIMALS } from "~~/utils/sovabase";
 
 interface VaultActionsProps {
-  data: VaultData;
+  data: UsdcVaultData;
 }
 
 export const VaultActions = ({ data }: VaultActionsProps) => {
@@ -28,7 +28,7 @@ export const VaultActions = ({ data }: VaultActionsProps) => {
   const [isMaxWithdraw, setIsMaxWithdraw] = useState(false);
 
   // Hooks
-  const { deposit, isProcessing: isDepositing, currentStep } = useVaultDeposit();
+  const { deposit, isProcessing: isDepositing, currentStep } = useUsdcVaultDeposit();
   const { writeContractAsync: writeVaultAsync } = useScaffoldWriteContract({ contractName: "vault" });
 
   // Handlers
@@ -36,7 +36,7 @@ export const VaultActions = ({ data }: VaultActionsProps) => {
     if (!depositAmount || !connectedAddress) return;
 
     try {
-      await deposit(depositAmount, DEFAULT_ASSET_DECIMALS, isMaxDeposit, usdcBalance);
+      await deposit(depositAmount, DEFAULT_USDC_DECIMALS, isMaxDeposit, usdcBalance);
       setDepositAmount("");
       setIsMaxDeposit(false);
       await refetch();
@@ -54,7 +54,7 @@ export const VaultActions = ({ data }: VaultActionsProps) => {
       if (isMaxWithdraw && maxWithdraw) {
         amount = maxWithdraw;
       } else {
-        amount = parseUnits(withdrawAmount, DEFAULT_ASSET_DECIMALS);
+        amount = parseUnits(withdrawAmount, DEFAULT_USDC_DECIMALS);
       }
       await writeVaultAsync({
         functionName: "withdraw",
@@ -98,7 +98,7 @@ export const VaultActions = ({ data }: VaultActionsProps) => {
             usdcBalance={usdcBalance}
             isDepositing={isDepositing}
             handleDeposit={handleDeposit}
-            assetDecimals={DEFAULT_ASSET_DECIMALS}
+            assetDecimals={DEFAULT_USDC_DECIMALS}
             setIsMaxDeposit={setIsMaxDeposit}
             apy={apy}
             depositStep={currentStep}
@@ -114,7 +114,7 @@ export const VaultActions = ({ data }: VaultActionsProps) => {
             maxWithdraw={maxWithdraw}
             isWithdrawing={isWithdrawing}
             handleWithdraw={handleWithdraw}
-            assetDecimals={DEFAULT_ASSET_DECIMALS}
+            assetDecimals={DEFAULT_USDC_DECIMALS}
             sharePrice={sharePrice}
             vaultDecimals={vaultDecimals}
             setIsMaxWithdraw={setIsMaxWithdraw}

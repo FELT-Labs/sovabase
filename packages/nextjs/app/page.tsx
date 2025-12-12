@@ -3,12 +3,12 @@
 import type { NextPage } from "next";
 import { useAccount } from "wagmi";
 import { VaultCard } from "~~/components/sovabase/VaultCard";
-import { useVaultData } from "~~/hooks/sovabase/useVaultData";
-import { DEFAULT_ASSET_DECIMALS } from "~~/utils/sovabase";
+import { useUsdcVaultData } from "~~/hooks/sovabase/useUsdcVaultData";
+import { DEFAULT_USDC_DECIMALS } from "~~/utils/sovabase";
 
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
-  const { vaultSymbol, totalAssets, userAssets } = useVaultData();
+  const { vaultSymbol, totalAssets, userAssets } = useUsdcVaultData();
 
   return (
     <>
@@ -42,8 +42,8 @@ const Home: NextPage = () => {
               symbol={vaultSymbol || ""}
               totalAssets={totalAssets}
               userAssets={connectedAddress ? userAssets : undefined}
-              decimals={DEFAULT_ASSET_DECIMALS}
-              assetDecimals={DEFAULT_ASSET_DECIMALS}
+              decimals={DEFAULT_USDC_DECIMALS}
+              assetDecimals={DEFAULT_USDC_DECIMALS}
               href="/vault/usdc"
               icon="💵"
               assetName="USDC"
@@ -57,7 +57,7 @@ const Home: NextPage = () => {
               userAssets={undefined}
               decimals={18}
               assetDecimals={18}
-              href="#"
+              href="/vault/eth"
               isComingSoon={true}
               icon="💎"
               assetName="ETH"

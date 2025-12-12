@@ -1,6 +1,6 @@
 import { formatUnits } from "viem";
 
-export const DEFAULT_ASSET_DECIMALS = 6;
+export const DEFAULT_USDC_DECIMALS = 6;
 
 export const formatAmount = (value: bigint | undefined, decimalsValue: number | undefined): string => {
   if (value === undefined || decimalsValue === undefined) return "...";
