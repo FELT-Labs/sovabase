@@ -26,7 +26,7 @@ const externalContracts: GenericContractsDeclaration = {
       abi: usdcAbi,
     },
     ethVault: {
-      address: "0x633bdc298c7f663a9000257dc495c30e910351a4",
+      address: "0x9A6CB6CaffE68b91C9A36E2657489Da3c2b1E116",
       abi: ethVaultAbi,
     },
     weth: {
