@@ -12,6 +12,7 @@ interface VaultCardProps {
   isComingSoon?: boolean;
   icon: React.ReactNode;
   assetName: string;
+  displayDecimals?: number;
 }
 
 export const VaultCard = ({
@@ -25,6 +26,7 @@ export const VaultCard = ({
   isComingSoon = false,
   icon,
   assetName,
+  displayDecimals = 2,
 }: VaultCardProps) => {
   const CardContent = (
     <div
@@ -49,14 +51,22 @@ export const VaultCard = ({
               Deposits
             </span>
           </p>
-          <p className="text-lg font-bold">{isComingSoon ? "--" : formatAmount(totalAssets, assetDecimals)}</p>
+          <p className="text-lg font-bold">
+            {isComingSoon ? "--" : formatAmount(totalAssets, assetDecimals, displayDecimals)}
+          </p>
           <p className="text-xs text-base-content/50">{assetName}</p>
         </div>
 
         <div className="bg-base-200 rounded-lg p-2">
           <p className="text-xs text-base-content/60">Your Balance</p>
           <p className="text-lg font-bold">
-            {isComingSoon ? "--" : userAssets ? formatAmount(userAssets, decimals) : "0.00"}
+            {isComingSoon
+              ? "--"
+              : userAssets
+                ? formatAmount(userAssets, decimals, displayDecimals)
+                : displayDecimals === 4
+                  ? "0.0000"
+                  : "0.00"}
           </p>
           <p className="text-xs text-base-content/50">{assetName}</p>
         </div>

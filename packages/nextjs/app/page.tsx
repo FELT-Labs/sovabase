@@ -3,12 +3,14 @@
 import type { NextPage } from "next";
 import { useAccount } from "wagmi";
 import { VaultCard } from "~~/components/sovabase/VaultCard";
+import { useEthVaultData } from "~~/hooks/sovabase/useEthVaultData";
 import { useUsdcVaultData } from "~~/hooks/sovabase/useUsdcVaultData";
-import { DEFAULT_USDC_DECIMALS } from "~~/utils/sovabase";
+import { DEFAULT_ETH_DECIMALS, DEFAULT_USDC_DECIMALS } from "~~/utils/sovabase";
 
 const Home: NextPage = () => {
   const { address: connectedAddress } = useAccount();
   const { vaultSymbol, totalAssets, userAssets } = useUsdcVaultData();
+  const { vaultSymbol: ethVaultSymbol, totalAssets: ethTotalAssets, userAssets: ethUserAssets } = useEthVaultData();
 
   return (
     <>
@@ -49,18 +51,18 @@ const Home: NextPage = () => {
               assetName="USDC"
             />
 
-            {/* ETH Vault Card (Under Development) */}
+            {/* ETH Vault Card */}
             <VaultCard
               name="ETH Vault"
-              symbol="svETH"
-              totalAssets={undefined}
-              userAssets={undefined}
-              decimals={18}
-              assetDecimals={18}
+              symbol={ethVaultSymbol || ""}
+              totalAssets={ethTotalAssets}
+              userAssets={connectedAddress ? ethUserAssets : undefined}
+              decimals={DEFAULT_ETH_DECIMALS}
+              assetDecimals={DEFAULT_ETH_DECIMALS}
               href="/vault/eth"
-              isComingSoon={true}
               icon="💎"
-              assetName="ETH"
+              assetName="WETH"
+              displayDecimals={4}
             />
           </div>
         </div>

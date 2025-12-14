@@ -1,5 +1,7 @@
+import { ethVaultAbi } from "./ethVaultAbi";
 import { usdcAbi } from "./usdcAbi";
 import { vaultAbi } from "./vaultAbi";
+import { wethAbi } from "./wethAbi";
 import { GenericContractsDeclaration } from "~~/utils/scaffold-eth/contract";
 
 /**
@@ -22,6 +24,14 @@ const externalContracts: GenericContractsDeclaration = {
     usdc: {
       address: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
       abi: usdcAbi,
+    },
+    ethVault: {
+      address: "0x633bdc298c7f663a9000257dc495c30e910351a4",
+      abi: ethVaultAbi,
+    },
+    weth: {
+      address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+      abi: wethAbi,
     },
   },
   137: {

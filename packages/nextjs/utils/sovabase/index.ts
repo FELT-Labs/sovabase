@@ -1,14 +1,24 @@
 import { formatUnits } from "viem";
 
 export const DEFAULT_USDC_DECIMALS = 6;
+export const DEFAULT_ETH_DECIMALS = 18;
 
-export const formatAmount = (value: bigint | undefined, decimalsValue: number | undefined): string => {
+export const formatAmount = (
+  value: bigint | undefined,
+  decimalsValue: number | undefined,
+  displayDecimals: number = 2,
+): string => {
   if (value === undefined || decimalsValue === undefined) return "...";
   const floatVal = parseFloat(formatUnits(value, decimalsValue));
-  // Floor to 2 decimals
-  const floored = Math.floor(floatVal * 100) / 100;
+  const multiplier = Math.pow(10, displayDecimals);
+  const floored = Math.floor(floatVal * multiplier) / multiplier;
   return floored.toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: displayDecimals,
+    maximumFractionDigits: displayDecimals,
   });
+};
+
+// Helper for ETH amounts (4 decimals)
+export const formatEthAmount = (value: bigint | undefined, decimalsValue: number | undefined): string => {
+  return formatAmount(value, decimalsValue, 4);
 };
